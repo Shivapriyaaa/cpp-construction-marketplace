@@ -1,0 +1,149 @@
+{% extends "admin_dashboard/base_admin.html" %}
+
+{% block title %}{% if category %}Edit{% else %}Add{% endif %} Category - ConstructionMart Admin{% endblock %}
+{% block page_title %}{% if category %}Edit Category{% else %}Add New Category{% endif %}{% endblock %}
+{% block page_subtitle %}{% if category %}Update category details{% else %}Create a new product category{% endif %}{% endblock %}
+
+{% block content %}
+<style>
+    .category-form {
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    
+    .category-form .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .category-form .form-group label {
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+    
+    .category-form .form-group .form-control {
+        border: 2px solid var(--border-light);
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        transition: all 0.3s;
+    }
+    
+    .category-form .form-group .form-control:focus {
+        border-color: var(--primary-blue);
+        box-shadow: none;
+    }
+    
+    .category-form .form-group .help-text {
+        font-size: 0.85rem;
+        color: var(--gray-text);
+        margin-top: 0.25rem;
+    }
+    
+    .icon-preview {
+        font-size: 3rem;
+        color: var(--primary-blue);
+        text-align: center;
+        padding: 1rem;
+        background: var(--light-bg);
+        border-radius: var(--radius-md);
+        margin-bottom: 1rem;
+    }
+    
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--border-light);
+    }
+    
+    .btn-save {
+        background: var(--success-green);
+        color: white;
+        border: none;
+        padding: 0.75rem 2rem;
+        border-radius: 50px;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+    
+    .btn-save:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+        color: white;
+    }
+    
+    .btn-cancel {
+        background: var(--light-bg);
+        color: var(--dark-text);
+        border: 2px solid var(--border-light);
+        padding: 0.75rem 2rem;
+        border-radius: 50px;
+        font-weight: 600;
+        transition: all 0.3s;
+        text-decoration: none;
+    }
+    
+    .btn-cancel:hover {
+        border-color: var(--gray-text);
+        transform: translateY(-2px);
+        text-decoration: none;
+        color: var(--dark-text);
+    }
+</style>
+
+<div class="content-card">
+    <div class="category-form">
+        <form method="POST">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label>Category Name *</label>
+                <input type="text" name="name" class="form-control" 
+                       value="{{ category.name|default:'' }}" 
+                       placeholder="e.g., Power Tools, Cement & Concrete" required>
+                <div class="help-text">Enter a descriptive name for the category</div>
+            </div>
+            
+            <!-- <div class="form-group">
+                <label>Font Awesome Icon</label>
+                <input type="text" name="icon" class="form-control" 
+                       value="{{ category.icon|default:'fa-box' }}" 
+                       placeholder="e.g., fa-tools, fa-hard-hat">
+                <div class="help-text">
+                    <a href="https://fontawesome.com/icons" target="_blank">Browse Font Awesome icons</a>
+                </div>
+            </div>
+            
+            <div class="icon-preview">
+                <i class="fas {{ category.icon|default:'fa-box' }}" id="iconPreview"></i>
+                <div style="font-size: 0.8rem; color: var(--gray-text); margin-top: 0.5rem;">
+                    Icon Preview
+                </div>
+            </div> -->
+            
+            <div class="form-group">
+                <label>Description</label>
+                <textarea name="description" class="form-control" rows="3" 
+                          placeholder="Brief description of this category">{{ category.description|default:'' }}</textarea>
+                <div class="help-text">Optional description for the category</div>
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="btn-save">
+                    <i class="fas fa-save"></i> {% if category %}Update Category{% else %}Create Category{% endif %}
+                </button>
+                <a href="{% url 'admin_categories' %}" class="btn-cancel">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Live icon preview
+    document.querySelector('input[name="icon"]').addEventListener('input', function() {
+        const preview = document.getElementById('iconPreview');
+        const iconClass = this.value.trim() || 'fa-box';
+        preview.className = 'fas ' + iconClass;
+    });
+</script>
+{% endblock %}

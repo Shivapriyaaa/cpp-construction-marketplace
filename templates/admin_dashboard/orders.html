@@ -1,0 +1,302 @@
+{% extends "admin_dashboard/base_admin.html" %}
+
+{% block title %}Orders - ConstructionMart Admin{% endblock %}
+{% block page_title %}Orders Management{% endblock %}
+{% block page_subtitle %}Manage all customer orders{% endblock %}
+
+{% block content %}
+<style>
+    .order-status-filter {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        margin-bottom: 1.5rem;
+    }
+
+    .order-status-filter .btn-filter {
+        padding: 0.4rem 1.2rem;
+        border-radius: 50px;
+        border: 2px solid var(--border-light);
+        background: white;
+        font-weight: 500;
+        transition: all 0.3s;
+    }
+
+    .order-status-filter .btn-filter:hover {
+        border-color: var(--primary-blue);
+        color: var(--primary-blue);
+    }
+
+    .order-status-filter .btn-filter.active {
+        background: var(--primary-blue);
+        color: white;
+        border-color: var(--primary-blue);
+    }
+
+    .order-card {
+        background: white;
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-md);
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        transition: all 0.3s;
+    }
+
+    .order-card:hover {
+        box-shadow: var(--shadow-sm);
+        transform: translateY(-2px);
+    }
+
+    .order-card .order-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        margin-bottom: 0.75rem;
+    }
+
+    .order-card .order-header .order-id {
+        font-weight: 600;
+        font-size: 1.1rem;
+    }
+
+    .order-card .order-header .order-date {
+        color: var(--gray-text);
+        font-size: 0.9rem;
+    }
+
+    .order-card .order-customer {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .order-card .order-customer .avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: var(--primary-blue);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 0.8rem;
+    }
+
+    .order-card .order-items {
+        margin: 0.75rem 0;
+        padding: 0.75rem 0;
+        border-top: 1px solid var(--border-light);
+        border-bottom: 1px solid var(--border-light);
+    }
+
+    .order-card .order-items .item {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.9rem;
+        padding: 0.25rem 0;
+    }
+
+    .order-card .order-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .order-card .order-footer .order-total {
+        font-weight: 700;
+        font-size: 1.2rem;
+        color: var(--primary-blue);
+    }
+
+    .order-card .order-footer .order-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .btn-view-order {
+        background: #E3F2FD;
+        color: var(--primary-blue);
+        border: none;
+        padding: 0.4rem 1.2rem;
+        border-radius: 50px;
+        font-weight: 500;
+        transition: all 0.3s;
+    }
+
+    .btn-view-order:hover {
+        background: var(--primary-blue);
+        color: white;
+    }
+
+    .btn-update-status {
+        background: var(--primary-orange);
+        color: white;
+        border: none;
+        padding: 0.4rem 1.2rem;
+        border-radius: 50px;
+        font-weight: 500;
+        transition: all 0.3s;
+    }
+
+    .btn-update-status:hover {
+        background: #E65100;
+        color: white;
+    }
+</style>
+
+<div class="content-card">
+    <div class="card-header">
+        <h5><i class="fas fa-shopping-bag"></i> All Orders</h5>
+        <div class="card-actions">
+            <button class="btn-outline-blue" onclick="window.print()">
+                <i class="fas fa-print"></i> Export
+            </button>
+        </div>
+    </div>
+
+    <!-- Status Filter -->
+    <div class="order-status-filter">
+        <button class="btn-filter active" data-status="all">All</button>
+        <button class="btn-filter" data-status="pending">Pending</button>
+        <button class="btn-filter" data-status="paid">Paid</button>
+        <button class="btn-filter" data-status="shipped">Shipped</button>
+        <button class="btn-filter" data-status="delivered">Delivered</button>
+        <button class="btn-filter" data-status="cancelled">Cancelled</button>
+    </div>
+
+    <!-- Orders List -->
+    {% for order in orders %}
+        <div class="order-card" data-status="{{ order.status }}">
+            <div class="order-header">
+                <span class="order-id">Order #{{ order.order_number }}</span>
+                <span class="order-date">
+                    <i class="far fa-calendar-alt"></i> {{ order.created_at|date:"M d, Y H:i" }}
+                </span>
+            </div>
+            
+            <div class="order-customer">
+                <div class="avatar">{{ order.user.username|make_list|first|upper }}</div>
+                <div>
+                    <strong>{{ order.user.get_full_name|default:order.user.username }}</strong>
+                    <div style="font-size: 0.85rem; color: var(--gray-text);">{{ order.user.email }}</div>
+                </div>
+                <span class="badge-status {{ order.status }} ms-auto">
+                    {{ order.get_status_display }}
+                </span>
+            </div>
+
+            <div class="order-items">
+                {% for item in order.items.all|slice:":3" %}
+                    <div class="item">
+                        <span>{{ item.product.name }} × {{ item.quantity }}</span>
+                        <span>${{ item.total_price|floatformat:2 }}</span>
+                    </div>
+                {% endfor %}
+                {% if order.items.count > 3 %}
+                    <div class="item text-muted">
+                        <span>... and {{ order.items.count|add:"-3" }} more items</span>
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="order-footer">
+                <div>
+                    <span class="order-total">${{ order.total_amount|floatformat:2 }}</span>
+                    <span class="text-muted ms-2">Total</span>
+                </div>
+                <div class="order-actions">
+                    <a href="{% url 'admin_order_detail' order.id %}" class="btn-view-order">
+                        <i class="fas fa-eye"></i> View
+                    </a>
+                    <button class="btn-update-status" onclick="updateStatus({{ order.id }})">
+                        <i class="fas fa-sync"></i> Update Status
+                    </button>
+                </div>
+            </div>
+        </div>
+    {% empty %}
+        <div class="text-center text-muted py-4">
+            <i class="fas fa-inbox fa-3x d-block mb-3"></i>
+            <h5>No orders found</h5>
+            <p>Orders will appear here once customers place them.</p>
+        </div>
+    {% endfor %}
+
+    <!-- Pagination -->
+    {% if orders.has_other_pages %}
+        <div class="pagination-custom">
+            {% if orders.has_previous %}
+                <a href="?page={{ orders.previous_page_number }}" class="page-link">&laquo;</a>
+            {% endif %}
+            {% for num in orders.paginator.page_range %}
+                <a href="?page={{ num }}" class="page-link {% if num == orders.number %}active{% endif %}">
+                    {{ num }}
+                </a>
+            {% endfor %}
+            {% if orders.has_next %}
+                <a href="?page={{ orders.next_page_number }}" class="page-link">&raquo;</a>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+
+<!-- Update Status Modal -->
+<div class="modal fade" id="statusModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Update Order Status</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="statusForm" method="POST" action="">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Select Status</label>
+                        <select name="status" class="form-select">
+                            <option value="pending">Pending</option>
+                            <option value="paid">Paid</option>
+                            <option value="shipped">Shipped</option>
+                            <option value="delivered">Delivered</option>
+                            <option value="cancelled">Cancelled</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn-primary-custom">Update Status</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function updateStatus(orderId) {
+        document.getElementById('statusForm').action = `/admin/orders/${orderId}/status/`;
+        new bootstrap.Modal(document.getElementById('statusModal')).show();
+    }
+
+    // Filter orders by status
+    document.querySelectorAll('.btn-filter').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.btn-filter').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            
+            const status = this.dataset.status;
+            document.querySelectorAll('.order-card').forEach(card => {
+                if (status === 'all' || card.dataset.status === status) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

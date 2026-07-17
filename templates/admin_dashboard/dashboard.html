@@ -1,0 +1,313 @@
+{% extends "admin_dashboard/base_admin.html" %}
+{% load static %}
+
+{% block title %}Dashboard - ConstructionMart Admin{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block page_subtitle %}Overview of your construction marketplace{% endblock %}
+
+{% block content %}
+<style>
+    .chart-container {
+        background: white;
+        border-radius: var(--radius-md);
+        padding: 1.5rem;
+        box-shadow: var(--shadow-sm);
+        height: 300px;
+    }
+
+    .recent-activity {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+
+    .activity-item {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid var(--border-light);
+    }
+
+    .activity-item:last-child {
+        border-bottom: none;
+    }
+
+    .activity-item .activity-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 1rem;
+        flex-shrink: 0;
+    }
+
+    .activity-item .activity-icon.blue {
+        background: #E3F2FD;
+        color: var(--primary-blue);
+    }
+
+    .activity-item .activity-icon.green {
+        background: #E8F5E9;
+        color: var(--success-green);
+    }
+
+    .activity-item .activity-icon.orange {
+        background: #FFF3E0;
+        color: var(--primary-orange);
+    }
+
+    .activity-item .activity-icon.red {
+        background: #FBE9E7;
+        color: var(--danger-red);
+    }
+
+    .activity-item .activity-content {
+        flex: 1;
+    }
+
+    .activity-item .activity-content .activity-text {
+        font-weight: 500;
+        margin: 0;
+    }
+
+    .activity-item .activity-content .activity-time {
+        font-size: 0.8rem;
+        color: var(--gray-text);
+        margin: 0;
+    }
+
+    .quick-action-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .quick-action-card {
+        background: white;
+        border: 2px solid var(--border-light);
+        border-radius: var(--radius-md);
+        padding: 1.5rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s;
+        text-decoration: none;
+        color: var(--dark-text);
+    }
+
+    .quick-action-card:hover {
+        border-color: var(--primary-blue);
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-md);
+        text-decoration: none;
+        color: var(--dark-text);
+    }
+
+    .quick-action-card i {
+        font-size: 2rem;
+        color: var(--primary-blue);
+        margin-bottom: 0.5rem;
+    }
+
+    .quick-action-card h6 {
+        font-weight: 600;
+        margin: 0;
+    }
+
+    .quick-action-card p {
+        font-size: 0.8rem;
+        color: var(--gray-text);
+        margin: 0;
+    }
+</style>
+
+<!-- Stats Grid -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon"><i class="fas fa-boxes"></i></div>
+        <p class="stat-number">{{ total_products }}</p>
+        <p class="stat-label">Total Products</p>
+        <div class="stat-change positive">
+            <i class="fas fa-arrow-up"></i> {{ new_products }} new this month
+        </div>
+    </div>
+    <div class="stat-card warning">
+        <div class="stat-icon"><i class="fas fa-shopping-bag"></i></div>
+        <p class="stat-number">{{ total_orders }}</p>
+        <p class="stat-label">Total Orders</p>
+        <div class="stat-change positive">
+            <i class="fas fa-arrow-up"></i> {{ new_orders }} this month
+        </div>
+    </div>
+    <div class="stat-card success">
+        <div class="stat-icon"><i class="fas fa-users"></i></div>
+        <p class="stat-number">{{ total_customers }}</p>
+        <p class="stat-label">Total Customers</p>
+        <div class="stat-change positive">
+            <i class="fas fa-arrow-up"></i> {{ new_customers }} this month
+        </div>
+    </div>
+    <div class="stat-card danger">
+        <div class="stat-icon"><i class="fas fa-dollar-sign"></i></div>
+        <p class="stat-number">${{ total_revenue|floatformat:0 }}</p>
+        <p class="stat-label">Revenue</p>
+        <div class="stat-change positive">
+            <i class="fas fa-arrow-up"></i> {{ revenue_growth }}% growth
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<!-- <div class="row g-4 mb-4">
+    <div class="col-lg-8">
+        <div class="content-card">
+            <div class="card-header">
+                <h5><i class="fas fa-chart-line"></i> Revenue Overview</h5>
+                <select class="form-select form-select-sm" style="width: auto;">
+                    <option>Last 7 Days</option>
+                    <option>Last 30 Days</option>
+                    <option>Last 90 Days</option>
+                </select>
+            </div>
+            <div class="chart-container">
+                <canvas id="revenueChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="content-card">
+            <div class="card-header">
+                <h5><i class="fas fa-chart-pie"></i> Product Categories</h5>
+            </div>
+            <div class="chart-container" style="height: 250px;">
+                <canvas id="categoryChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div> -->
+
+<!-- Recent Activity & Quick Actions -->
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="content-card">
+            <div class="card-header">
+                <h5><i class="fas fa-clock"></i> Recent Activity</h5>
+                <a href="#" class="btn-outline-blue btn-sm">View All</a>
+            </div>
+            <div class="recent-activity">
+                {% for activity in recent_activities %}
+                    <div class="activity-item">
+                        <div class="activity-icon {{ activity.icon_color }}">
+                            <i class="fas {{ activity.icon }}"></i>
+                        </div>
+                        <div class="activity-content">
+                            <p class="activity-text">{{ activity.text }}</p>
+                            <p class="activity-time">{{ activity.time }}</p>
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="text-center text-muted py-3">
+                        <i class="fas fa-inbox"></i> No recent activity
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="content-card">
+            <div class="card-header">
+                <h5><i class="fas fa-bolt"></i> Quick Actions</h5>
+            </div>
+            <div class="quick-action-grid">
+                <a href="{% url 'admin_product_add' %}" class="quick-action-card">
+                    <i class="fas fa-plus-circle"></i>
+                    <h6>Add Product</h6>
+                    <p>New product listing</p>
+                </a>
+                <a href="{% url 'admin_orders' %}" class="quick-action-card">
+                    <i class="fas fa-box"></i>
+                    <h6>View Orders</h6>
+                    <p>Manage orders</p>
+                </a>
+                <a href="{% url 'admin_inventory' %}" class="quick-action-card">
+                    <i class="fas fa-warehouse"></i>
+                    <h6>Inventory</h6>
+                    <p>Check stock levels</p>
+                </a>
+                <a href="#" class="quick-action-card">
+                    <i class="fas fa-file-invoice"></i>
+                    <h6>Reports</h6>
+                    <p>Generate reports</p>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Revenue Chart
+    const ctx = document.getElementById('revenueChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+            datasets: [{
+                label: 'Revenue',
+                data: [1200, 1900, 1500, 2100, 1800, 2400, 3200],
+                borderColor: '#1A73E8',
+                backgroundColor: 'rgba(26, 115, 232, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return '$' + value;
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // Category Chart
+    const ctx2 = document.getElementById('categoryChart').getContext('2d');
+    new Chart(ctx2, {
+        type: 'doughnut',
+        data: {
+            labels: ['Cement', 'Tools', 'Steel', 'Safety', 'Other'],
+            datasets: [{
+                data: [30, 25, 20, 15, 10],
+                backgroundColor: [
+                    '#1A73E8',
+                    '#F57C00',
+                    '#2E7D32',
+                    '#C62828',
+                    '#6B7280'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

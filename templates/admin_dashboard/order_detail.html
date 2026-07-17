@@ -1,0 +1,329 @@
+{% extends "admin_dashboard/base_admin.html" %}
+
+{% block title %}Order #{{ order.order_number }} - ConstructionMart Admin{% endblock %}
+{% block page_title %}Order #{{ order.order_number }}{% endblock %}
+{% block page_subtitle %}Order details and management{% endblock %}
+
+{% block content %}
+<style>
+    .order-detail-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 1.5rem;
+    }
+
+    .order-info-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .info-box {
+        background: var(--light-bg);
+        padding: 1rem;
+        border-radius: var(--radius-md);
+    }
+
+    .info-box .info-label {
+        font-size: 0.8rem;
+        color: var(--gray-text);
+        text-transform: uppercase;
+        font-weight: 600;
+    }
+
+    .info-box .info-value {
+        font-weight: 600;
+        font-size: 1.1rem;
+        margin: 0;
+    }
+
+    .order-timeline {
+        padding: 0;
+        list-style: none;
+        position: relative;
+    }
+
+    .order-timeline::before {
+        content: '';
+        position: absolute;
+        left: 15px;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: var(--border-light);
+    }
+
+    .order-timeline li {
+        padding: 0 0 2rem 3.5rem;
+        position: relative;
+    }
+
+    .order-timeline li::before {
+        content: '';
+        position: absolute;
+        left: 8px;
+        top: 4px;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: var(--border-light);
+        border: 3px solid white;
+        box-shadow: 0 0 0 2px var(--border-light);
+    }
+
+    .order-timeline li.completed::before {
+        background: var(--success-green);
+        box-shadow: 0 0 0 2px var(--success-green);
+    }
+
+    .order-timeline li .timeline-title {
+        font-weight: 600;
+    }
+
+    .order-timeline li .timeline-date {
+        font-size: 0.85rem;
+        color: var(--gray-text);
+    }
+
+    .order-item-detail {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid var(--border-light);
+    }
+
+    .order-item-detail:last-child {
+        border-bottom: none;
+    }
+
+    .order-item-detail .item-info .item-name {
+        font-weight: 500;
+    }
+
+    .order-item-detail .item-info .item-meta {
+        font-size: 0.85rem;
+        color: var(--gray-text);
+    }
+
+    .order-item-detail .item-price {
+        font-weight: 600;
+    }
+
+    @media (max-width: 768px) {
+        .order-detail-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .order-info-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="order-detail-grid">
+    <div>
+        <!-- Order Items -->
+        <div class="content-card">
+            <div class="card-header">
+                <h5><i class="fas fa-box"></i> Order Items</h5>
+            </div>
+            {% for item in order.items.all %}
+                <div class="order-item-detail">
+                    <div class="item-info">
+                        <div class="item-name">{{ item.product.name }}</div>
+                        <div class="item-meta">
+                            {{ item.quantity }} × ${{ item.unit_price|floatformat:2 }}
+                            {% if item.transaction_type == 'rent' %}
+                                (Rental - {{ item.rental_days }} days)
+                            {% else %}
+                                (Purchase)
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="item-price">${{ item.total_price|floatformat:2 }}</div>
+                </div>
+            {% endfor %}
+            <div class="order-item-detail" style="font-weight: 700; font-size: 1.2rem; border-top: 2px solid var(--border-light); padding-top: 1rem;">
+                <span>Total</span>
+                <span>${{ order.total_amount|floatformat:2 }}</span>
+            </div>
+        </div>
+
+        <!-- Order Timeline -->
+        <div class="content-card">
+            <div class="card-header">
+                <h5><i class="fas fa-clock"></i> Order Timeline</h5>
+            </div>
+            <ul class="order-timeline">
+                <li class="completed">
+                    <div class="timeline-title">Order Placed</div>
+                    <div class="timeline-date">{{ order.created_at|date:"M d, Y H:i" }}</div>
+                </li>
+                {% if order.payment_completed %}
+                    <li class="completed">
+                        <div class="timeline-title">Payment Completed</div>
+                        <div class="timeline-date">{{ order.updated_at|date:"M d, Y H:i" }}</div>
+                    </li>
+                {% endif %}
+                {% if order.status == 'shipped' %}
+                    <li class="completed">
+                        <div class="timeline-title">Order Shipped</div>
+                        <div class="timeline-date">{{ order.updated_at|date:"M d, Y H:i" }}</div>
+                    </li>
+                {% endif %}
+                {% if order.status == 'delivered' %}
+                    <li class="completed">
+                        <div class="timeline-title">Order Delivered</div>
+                        <div class="timeline-date">{{ order.updated_at|date:"M d, Y H:i" }}</div>
+                    </li>
+                {% endif %}
+                {% if order.status == 'cancelled' %}
+                    <li class="completed">
+                        <div class="timeline-title">Order Cancelled</div>
+                        <div class="timeline-date">{{ order.updated_at|date:"M d, Y H:i" }}</div>
+                    </li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+
+    <div>
+        <!-- Order Info -->
+        <div class="content-card">
+            <div class="card-header">
+                <h5><i class="fas fa-info-circle"></i> Order Information</h5>
+            </div>
+            <div class="order-info-grid">
+                <div class="info-box">
+                    <div class="info-label">Order Number</div>
+                    <p class="info-value">{{ order.order_number }}</p>
+                </div>
+                <div class="info-box">
+                    <div class="info-label">Invoice Number</div>
+                    <p class="info-value">{{ order.invoice_number|default:"Pending" }}</p>
+                </div>
+                <div class="info-box">
+                    <div class="info-label">Order Date</div>
+                    <p class="info-value">{{ order.created_at|date:"M d, Y" }}</p>
+                </div>
+                <div class="info-box">
+                    <div class="info-label">Status</div>
+                    <p class="info-value">
+                        <span class="badge-status {{ order.status }}">
+                            {{ order.get_status_display }}
+                        </span>
+                    </p>
+                </div>
+                <div class="info-box" style="grid-column: 1 / -1;">
+                    <div class="info-label">Payment</div>
+                    <p class="info-value">
+                        {% if order.payment_completed %}
+                            <span class="badge-status active">Paid</span>
+                        {% else %}
+                            <span class="badge-status pending">Pending</span>
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Customer Info -->
+        <div class="content-card">
+            <div class="card-header">
+                <h5><i class="fas fa-user"></i> Customer Information</h5>
+            </div>
+            <div class="info-box mb-3">
+                <div class="info-label">Name</div>
+                <p class="info-value">{{ order.user.get_full_name|default:order.user.username }}</p>
+            </div>
+            <div class="info-box mb-3">
+                <div class="info-label">Email</div>
+                <p class="info-value">{{ order.user.email }}</p>
+            </div>
+            <div class="info-box mb-3">
+                <div class="info-label">Phone</div>
+                <p class="info-value">{{ order.phone_number }}</p>
+            </div>
+            <div class="info-box">
+                <div class="info-label">Shipping Address</div>
+                <p class="info-value">{{ order.shipping_address|linebreaks }}</p>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="content-card">
+            <div class="card-header">
+                <h5><i class="fas fa-cog"></i> Actions</h5>
+            </div>
+            <div class="d-grid gap-2">
+                <button class="btn-orange-custom" onclick="updateStatus({{ order.id }})">
+                    <i class="fas fa-sync"></i> Update Status
+                </button>
+                {% if not order.payment_completed %}
+                    <button class="btn-primary-custom" onclick="markAsPaid({{ order.id }})">
+                        <i class="fas fa-check"></i> Mark as Paid
+                    </button>
+                {% endif %}
+                <button class="btn-outline-blue" onclick="window.print()">
+                    <i class="fas fa-print"></i> Print Invoice
+                </button>
+                <a href="{% url 'admin_orders' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Orders
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Update Status Modal -->
+<div class="modal fade" id="statusModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Update Order Status</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="statusForm" method="POST" action="">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Select Status</label>
+                        <select name="status" class="form-select">
+                            <option value="pending">Pending</option>
+                            <option value="paid">Paid</option>
+                            <option value="shipped">Shipped</option>
+                            <option value="delivered">Delivered</option>
+                            <option value="cancelled">Cancelled</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn-primary-custom">Update Status</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function updateStatus(orderId) {
+        document.getElementById('statusForm').action = `/admin/orders/${orderId}/status/`;
+        new bootstrap.Modal(document.getElementById('statusModal')).show();
+    }
+
+    function markAsPaid(orderId) {
+        if (confirm('Mark this order as paid?')) {
+            fetch(`/admin/orders/${orderId}/pay/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                },
+            }).then(() => {
+                location.reload();
+            });
+        }
+    }
+</script>
+{% endblock %}

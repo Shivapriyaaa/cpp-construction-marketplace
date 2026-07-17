@@ -1,0 +1,166 @@
+{% extends "admin_dashboard/base_admin.html" %}
+
+{% block title %}Customers - ConstructionMart Admin{% endblock %}
+{% block page_title %}Customer Management{% endblock %}
+{% block page_subtitle %}View and manage customer accounts{% endblock %}
+
+{% block content %}
+<style>
+    .customer-card {
+        background: white;
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-md);
+        padding: 1.5rem;
+        text-align: center;
+        transition: all 0.3s;
+    }
+
+    .customer-card:hover {
+        box-shadow: var(--shadow-sm);
+        transform: translateY(-4px);
+    }
+
+    .customer-card .avatar-large {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: var(--primary-blue);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        font-weight: 700;
+        margin: 0 auto 1rem;
+    }
+
+    .customer-card .customer-name {
+        font-weight: 600;
+        font-size: 1.1rem;
+        margin: 0;
+    }
+
+    .customer-card .customer-email {
+        color: var(--gray-text);
+        font-size: 0.9rem;
+    }
+
+    .customer-card .customer-stats {
+        display: flex;
+        justify-content: center;
+        gap: 1.5rem;
+        margin: 1rem 0;
+        padding: 0.75rem 0;
+        border-top: 1px solid var(--border-light);
+        border-bottom: 1px solid var(--border-light);
+    }
+
+    .customer-card .customer-stats .stat {
+        text-align: center;
+    }
+
+    .customer-card .customer-stats .stat .number {
+        font-weight: 700;
+        font-size: 1.1rem;
+    }
+
+    .customer-card .customer-stats .stat .label {
+        font-size: 0.75rem;
+        color: var(--gray-text);
+    }
+
+    .customer-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .btn-view-customer {
+        background: #E3F2FD;
+        color: var(--primary-blue);
+        border: none;
+        padding: 0.4rem 1.2rem;
+        border-radius: 50px;
+        font-weight: 500;
+        transition: all 0.3s;
+        width: 100%;
+    }
+
+    .btn-view-customer:hover {
+        background: var(--primary-blue);
+        color: white;
+    }
+</style>
+
+<div class="content-card">
+    <div class="card-header">
+        <h5><i class="fas fa-users"></i> All Customers</h5>
+        <div class="card-actions">
+            <span class="text-muted">Total: {{ customers|length }}</span>
+        </div>
+    </div>
+
+    <!-- Search -->
+    <div class="filter-bar">
+        <input type="text" class="form-control" placeholder="Search customers..." id="searchCustomer">
+        <button class="btn-primary-custom" onclick="searchCustomers()">Search</button>
+    </div>
+
+    <!-- Customer Grid -->
+    <div class="customer-grid" id="customerGrid">
+        {% for customer in customers %}
+            <div class="customer-card">
+                <div class="avatar-large">{{ customer.username|make_list|first|upper }}</div>
+                <p class="customer-name">{{ customer.get_full_name|default:customer.username }}</p>
+                <p class="customer-email">{{ customer.email }}</p>
+                <div class="customer-stats">
+                    <div class="stat">
+                        <div class="number">{{ customer.orders_count|default:0 }}</div>
+                        <div class="label">Orders</div>
+                    </div>
+                    <div class="stat">
+                        <div class="number">${{ customer.total_spent|default:0|floatformat:0 }}</div>
+                        <div class="label">Spent</div>
+                    </div>
+                    <div class="stat">
+                        <div class="number">{{ customer.date_joined|date:"Y" }}</div>
+                        <div class="label">Joined</div>
+                    </div>
+                </div>
+                <a href="#" class="btn-view-customer">
+                    <i class="fas fa-user"></i> View Profile
+                </a>
+            </div>
+        {% empty %}
+            <div class="col-12 text-center text-muted py-4">
+                <i class="fas fa-users fa-3x d-block mb-3"></i>
+                <h5>No customers yet</h5>
+                <p>Customers will appear here once they register.</p>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+    function searchCustomers() {
+        const search = document.getElementById('searchCustomer').value.toLowerCase();
+        const cards = document.querySelectorAll('.customer-card');
+        
+        cards.forEach(card => {
+            const name = card.querySelector('.customer-name').textContent.toLowerCase();
+            const email = card.querySelector('.customer-email').textContent.toLowerCase();
+            if (name.includes(search) || email.includes(search)) {
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    }
+
+    document.getElementById('searchCustomer').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            searchCustomers();
+        }
+    });
+</script>
+{% endblock %}

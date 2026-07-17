@@ -1,0 +1,377 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Home - ConstructionMart{% endblock %}
+
+{% block content %}
+<style>
+    .hero-section {
+        background: linear-gradient(135deg, #1A73E8 0%, #4A90E2 100%);
+        padding: 4rem 0;
+        border-radius: var(--radius-lg);
+        margin-bottom: 3rem;
+        color: white;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .hero-section::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -20%;
+        width: 500px;
+        height: 500px;
+        background: rgba(255,255,255,0.05);
+        border-radius: 50%;
+    }
+
+    .hero-section h1 {
+        font-weight: 800;
+        font-size: 3.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .hero-section .lead {
+        font-size: 1.25rem;
+        opacity: 0.95;
+    }
+
+    .hero-stats {
+        display: flex;
+        gap: 3rem;
+        margin-top: 2rem;
+    }
+
+    .hero-stats .stat-item {
+        text-align: center;
+    }
+
+    .hero-stats .stat-number {
+        font-size: 2rem;
+        font-weight: 700;
+    }
+
+    .hero-stats .stat-label {
+        font-size: 0.9rem;
+        opacity: 0.8;
+    }
+
+    .category-card {
+        background: white;
+        padding: 1.5rem;
+        border-radius: var(--radius-md);
+        text-align: center;
+        transition: all 0.3s;
+        box-shadow: var(--shadow-sm);
+        border: 2px solid transparent;
+        cursor: pointer;
+        text-decoration: none;
+        color: var(--dark-text);
+        display: block;
+    }
+
+    .category-card:hover {
+        transform: translateY(-8px);
+        box-shadow: var(--shadow-md);
+        border-color: var(--primary-blue);
+        text-decoration: none;
+        color: var(--dark-text);
+    }
+
+    .category-card i {
+        font-size: 3rem;
+        color: var(--primary-orange);
+        margin-bottom: 0.5rem;
+    }
+
+    .category-card h6 {
+        font-weight: 600;
+        margin: 0;
+    }
+
+    .product-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .product-card {
+        background: white;
+        border-radius: var(--radius-md);
+        overflow: hidden;
+        box-shadow: var(--shadow-sm);
+        transition: all 0.3s;
+        border: 1px solid var(--border-light);
+    }
+
+    .product-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-md);
+    }
+
+    .product-card .image-wrapper {
+        height: 200px;
+        background: var(--light-bg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        position: relative;
+    }
+
+    .product-card .image-wrapper img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .product-card .image-wrapper .placeholder-icon {
+        font-size: 4rem;
+        color: #CBD5E1;
+    }
+
+    .product-card .badge-type {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        padding: 4px 12px;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 0.75rem;
+        background: var(--primary-orange);
+        color: white;
+    }
+
+    .product-card .badge-type.sale {
+        background: #2E7D32;
+    }
+
+    .product-card .badge-type.rent {
+        background: #1565C0;
+    }
+
+    .product-card .badge-type.both {
+        background: #6A1B9A;
+    }
+
+    .product-card .card-body {
+        padding: 1.25rem;
+    }
+
+    .product-card .card-title {
+        font-weight: 600;
+        font-size: 1.1rem;
+        margin-bottom: 0.5rem;
+        min-height: 3rem;
+    }
+
+    .product-card .price-tag {
+        font-weight: 700;
+        color: var(--primary-blue);
+        font-size: 1.25rem;
+    }
+
+    .product-card .price-tag .original {
+        color: var(--gray-text);
+        font-weight: 400;
+        font-size: 0.9rem;
+        text-decoration: line-through;
+        margin-left: 8px;
+    }
+
+    .product-card .stock-badge {
+        font-size: 0.8rem;
+        padding: 2px 10px;
+        border-radius: 50px;
+    }
+
+    .stock-badge.in-stock {
+        background: #E8F5E9;
+        color: #2E7D32;
+    }
+
+    .stock-badge.low-stock {
+        background: #FFF3E0;
+        color: #E65100;
+    }
+
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .section-header h2 {
+        font-weight: 700;
+        color: var(--dark-text);
+    }
+
+    .section-header h2 i {
+        color: var(--primary-orange);
+        margin-right: 8px;
+    }
+
+    .btn-outline-blue {
+        border: 2px solid var(--primary-blue);
+        color: var(--primary-blue);
+        background: transparent;
+        padding: 0.5rem 1.5rem;
+        border-radius: 50px;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+
+    .btn-outline-blue:hover {
+        background: var(--primary-blue);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+    }
+
+    @media (max-width: 768px) {
+        .hero-section h1 {
+            font-size: 2rem;
+        }
+
+        .hero-stats {
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .product-grid {
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        }
+    }
+</style>
+
+<!-- Hero Section -->
+<div class="hero-section">
+    <div class="container position-relative">
+        <div class="row align-items-center">
+            <div class="col-lg-7">
+                <h1>Build Your Dream<br>With ConstructionMart</h1>
+                <p class="lead">Quality construction materials and equipment for sale and rent. Everything you need for your project.</p>
+                <!--<div class="hero-stats">-->
+                <!--    <div class="stat-item">-->
+                <!--        <div class="stat-number">500+</div>-->
+                <!--        <div class="stat-label">Products</div>-->
+                <!--    </div>-->
+                <!--    <div class="stat-item">-->
+                <!--        <div class="stat-number">50+</div>-->
+                <!--        <div class="stat-label">Categories</div>-->
+                <!--    </div>-->
+                <!--    <div class="stat-item">-->
+                <!--        <div class="stat-number">1000+</div>-->
+                <!--        <div class="stat-label">Happy Customers</div>-->
+                <!--    </div>-->
+                <!--</div>-->
+            </div>
+            <div class="col-lg-5 d-none d-lg-block">
+                <i class="fas fa-hard-hat" style="font-size: 8rem; opacity: 0.3;"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Categories -->
+<div class="mb-5">
+    <div class="section-header">
+        <h2><i class="fas fa-tags"></i> Shop by Category</h2>
+    </div>
+    <div class="row g-3">
+        {% for category in categories %}
+            <div class="col-6 col-md-3 col-lg-2">
+                <a href="#" class="category-card">
+                    <i class="fas {{ category.icon|default:'fa-box' }}"></i>
+                    <h6>{{ category.name }}</h6>
+                </a>
+            </div>
+        {% empty %}
+            <div class="col-12 text-center text-muted">
+                <p>No categories available</p>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Products for Sale -->
+<div class="mb-5">
+    <div class="section-header">
+        <h2><i class="fas fa-shopping-bag"></i> Products for Sale</h2>
+        <a href="#" class="btn-outline-blue">View All <i class="fas fa-arrow-right"></i></a>
+    </div>
+    <div class="product-grid">
+        {% for product in sale_products %}
+            <div class="product-card">
+                <div class="image-wrapper">
+                    {% if product.image %}
+                        <img src="{{ product.image.url }}" alt="{{ product.name }}">
+                    {% else %}
+                        <div class="placeholder-icon">
+                            <i class="fas fa-tools"></i>
+                        </div>
+                    {% endif %}
+                    <span class="badge-type sale">For Sale</span>
+                </div>
+                <div class="card-body">
+                    <h6 class="card-title">{{ product.name }}</h6>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="price-tag">${{ product.price }}</span>
+                        <span class="stock-badge {% if product.stock_quantity > 10 %}in-stock{% else %}low-stock{% endif %}">
+                            {{ product.stock_quantity }} in stock
+                        </span>
+                    </div>
+                    <a href="{% url 'product_detail' product.id %}" class="btn-orange w-100">View Details</a>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-12 text-center text-muted">
+                <p>No products available for sale</p>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Products for Rent -->
+<div class="mb-5">
+    <div class="section-header">
+        <h2><i class="fas fa-calendar-alt"></i> Products for Rent</h2>
+        <a href="#" class="btn-outline-blue">View All <i class="fas fa-arrow-right"></i></a>
+    </div>
+    <div class="product-grid">
+        {% for product in rent_products %}
+            <div class="product-card">
+                <div class="image-wrapper">
+                    {% if product.image %}
+                        <img src="{{ product.image.url }}" alt="{{ product.name }}">
+                    {% else %}
+                        <div class="placeholder-icon">
+                            <i class="fas fa-tools"></i>
+                        </div>
+                    {% endif %}
+                    <span class="badge-type rent">For Rent</span>
+                </div>
+                <div class="card-body">
+                    <h6 class="card-title">{{ product.name }}</h6>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div>
+                            <span class="price-tag">${{ product.rental_price }}</span>
+                            <small class="text-muted">/ {{ product.rental_period|default:"day" }}</small>
+                        </div>
+                        <span class="stock-badge {% if product.stock_quantity > 10 %}in-stock{% else %}low-stock{% endif %}">
+                            {{ product.stock_quantity }} available
+                        </span>
+                    </div>
+                    <a href="{% url 'product_detail' product.id %}" class="btn-orange w-100">View Details</a>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-12 text-center text-muted">
+                <p>No products available for rent</p>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

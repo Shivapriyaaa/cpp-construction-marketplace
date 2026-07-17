@@ -1,0 +1,215 @@
+{% extends "admin_dashboard/base_admin.html" %}
+
+{% block title %}Settings - ConstructionMart Admin{% endblock %}
+{% block page_title %}System Settings{% endblock %}
+{% block page_subtitle %}Configure your marketplace settings{% endblock %}
+
+{% block content %}
+<style>
+    .settings-group {
+        margin-bottom: 2rem;
+    }
+
+    .settings-group h5 {
+        font-weight: 600;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid var(--border-light);
+    }
+
+    .settings-group .setting-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 0;
+        border-bottom: 1px solid var(--border-light);
+    }
+
+    .settings-group .setting-item:last-child {
+        border-bottom: none;
+    }
+
+    .settings-group .setting-item .setting-label {
+        font-weight: 500;
+    }
+
+    .settings-group .setting-item .setting-description {
+        font-size: 0.85rem;
+        color: var(--gray-text);
+    }
+
+    .form-switch .form-check-input {
+        width: 48px;
+        height: 24px;
+    }
+
+    .form-switch .form-check-input:checked {
+        background-color: var(--success-green);
+        border-color: var(--success-green);
+    }
+
+    .btn-save-settings {
+        background: var(--success-green);
+        color: white;
+        border: none;
+        padding: 0.75rem 2rem;
+        border-radius: 50px;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+
+    .btn-save-settings:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+        color: white;
+    }
+</style>
+
+<div class="content-card">
+    <form method="POST">
+        {% csrf_token %}
+        
+        <!-- Store Settings -->
+        <div class="settings-group">
+            <h5><i class="fas fa-store"></i> Store Settings</h5>
+            <div class="setting-item">
+                <div>
+                    <div class="setting-label">Store Name</div>
+                    <div class="setting-description">Your store's display name</div>
+                </div>
+                <input type="text" class="form-control" style="width: 300px;" value="ConstructionMart">
+            </div>
+            <div class="setting-item">
+                <div>
+                    <div class="setting-label">Store Email</div>
+                    <div class="setting-description">Customer support email</div>
+                </div>
+                <input type="email" class="form-control" style="width: 300px;" value="support@constructionmart.com">
+            </div>
+            <div class="setting-item">
+                <div>
+                    <div class="setting-label">Phone Number</div>
+                    <div class="setting-description">Customer support phone</div>
+                </div>
+                <input type="text" class="form-control" style="width: 300px;" value="+1 (555) 123-4567">
+            </div>
+            <div class="setting-item">
+                <div>
+                    <div class="setting-label">Currency</div>
+                    <div class="setting-description">Store currency symbol</div>
+                </div>
+                <select class="form-select" style="width: 300px;">
+                    <option selected>USD ($)</option>
+                    <option>EUR (€)</option>
+                    <option>GBP (£)</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Order Settings -->
+        <div class="settings-group">
+            <h5><i class="fas fa-shopping-bag"></i> Order Settings</h5>
+            <div class="setting-item">
+                <div>
+                    <div class="setting-label">Minimum Order Amount</div>
+                    <div class="setting-description">Minimum order total for checkout</div>
+                </div>
+                <input type="number" class="form-control" style="width: 200px;" value="10">
+            </div>
+            <div class="setting-item">
+                <div>
+                    <div class="setting-label">Shipping Fee</div>
+                    <div class="setting-description">Flat shipping rate</div>
+                </div>
+                <input type="number" class="form-control" style="width: 200px;" value="5.99">
+            </div>
+            <div class="setting-item">
+                <div>
+                    <div class="setting-label">Free Shipping Threshold</div>
+                    <div class="setting-description">Orders above this amount get free shipping</div>
+                </div>
+                <input type="number" class="form-control" style="width: 200px;" value="50">
+            </div>
+        </div>
+
+        <!-- Notification Settings -->
+        <!-- <div class="settings-group">
+            <h5><i class="fas fa-bell"></i> Notification Settings</h5>
+            <div class="setting-item">
+                <div>
+                    <div class="setting-label">Order Confirmation Email</div>
+                    <div class="setting-description">Send email to customers when order is confirmed</div>
+                </div>
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" checked>
+                </div>
+            </div>
+            <div class="setting-item">
+                <div>
+                    <div class="setting-label">Order Status Update Email</div>
+                    <div class="setting-description">Send email when order status changes</div>
+                </div>
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" checked>
+                </div>
+            </div>
+            <div class="setting-item">
+                <div>
+                    <div class="setting-label">Low Stock Alert</div>
+                    <div class="setting-description">Notify when stock falls below threshold</div>
+                </div>
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" checked>
+                </div>
+            </div>
+            <div class="setting-item">
+                <div>
+                    <div class="setting-label">Low Stock Threshold</div>
+                    <div class="setting-description">Trigger alert when stock is below this number</div>
+                </div>
+                <input type="number" class="form-control" style="width: 100px;" value="10">
+            </div>
+        </div> -->
+
+        <!-- Payment Settings -->
+        <!-- <div class="settings-group">
+            <h5><i class="fas fa-credit-card"></i> Payment Settings</h5>
+            <div class="setting-item">
+                <div>
+                    <div class="setting-label">Payment Methods</div>
+                    <div class="setting-description">Enabled payment methods</div>
+                </div>
+                <div style="display: flex; gap: 1rem;">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="creditCard" checked>
+                        <label class="form-check-label" for="creditCard">Credit Card</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="bankTransfer" checked>
+                        <label class="form-check-label" for="bankTransfer">Bank Transfer</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="mobileWallet" checked>
+                        <label class="form-check-label" for="mobileWallet">Mobile Wallet</label>
+                    </div>
+                </div>
+            </div>
+            <div class="setting-item">
+                <div>
+                    <div class="setting-label">Test Mode</div>
+                    <div class="setting-description">Enable test mode for payments (no real charges)</div>
+                </div>
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox">
+                </div>
+            </div>
+        </div> -->
+
+        <div class="text-end mt-4">
+            <button type="submit" class="btn-save-settings">
+                <i class="fas fa-save"></i> Save Settings
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

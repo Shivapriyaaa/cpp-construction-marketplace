@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+
+{% block title %}Order Confirmation - ConstructionMart{% endblock %}
+
+{% block content %}
+<style>
+    .confirmation-section {
+        max-width: 800px;
+        margin: 0 auto;
+        background: white;
+        border-radius: var(--radius-lg);
+        padding: 2.5rem;
+        box-shadow: var(--shadow-sm);
+        text-align: center;
+    }
+
+    .success-icon {
+        font-size: 5rem;
+        color: var(--success-green);
+        margin-bottom: 1rem;
+    }
+
+    .confirmation-section h2 {
+        font-weight: 700;
+        color: var(--success-green);
+    }
+
+    .order-details {
+        background: var(--light-bg);
+        border-radius: var(--radius-md);
+        padding: 1.5rem;
+        margin: 1.5rem 0;
+        text-align: left;
+    }
+
+    .order-details .detail-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid var(--border-light);
+    }
+
+    .order-details .detail-row:last-child {
+        border-bottom: none;
+    }
+
+    .order-items {
+        margin: 1.5rem 0;
+        text-align: left;
+    }
+
+    .order-items .item-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid var(--border-light);
+    }
+
+    .order-items .item-row:last-child {
+        border-bottom: none;
+    }
+
+    .btn-continue {
+        background: var(--primary-blue);
+        color: white;
+        border: none;
+        padding: 0.75rem 2rem;
+        border-radius: 50px;
+        font-weight: 600;
+        transition: all 0.3s;
+        text-decoration: none;
+        display: inline-block;
+    }
+
+    .btn-continue:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+        color: white;
+    }
+</style>
+
+<div class="confirmation-section">
+    <div class="success-icon">
+        <i class="fas fa-check-circle"></i>
+    </div>
+    <h2>Order Confirmed!</h2>
+    <p class="text-muted">Thank you for your order. We'll process it right away.</p>
+
+    <!--<div class="order-details">-->
+    <!--    <div class="detail-row">-->
+    <!--        <span><strong>Order Number</strong></span>-->
+    <!--        <span>{{ order.order_number }}</span>-->
+    <!--    </div>-->
+    <!--    <div class="detail-row">-->
+    <!--        <span><strong>Invoice Number</strong></span>-->
+    <!--        <span>{{ order.invoice_number|default:"Pending" }}</span>-->
+    <!--    </div>-->
+    <!--    <div class="detail-row">-->
+    <!--        <span><strong>Order Date</strong></span>-->
+    <!--        <span>{{ order.created_at|date:"F d, Y H:i" }}</span>-->
+    <!--    </div>-->
+    <!--    <div class="detail-row">-->
+    <!--        <span><strong>Payment Status</strong></span>-->
+    <!--        <span><span class="badge bg-success">Paid</span></span>-->
+    <!--    </div>-->
+    <!--    <div class="detail-row">-->
+    <!--        <span><strong>Total Amount</strong></span>-->
+    <!--        <span><strong>${{ order.total_amount|floatformat:2 }}</strong></span>-->
+    <!--    </div>-->
+    <!--</div>-->
+    
+    
+    
+    <div class="order-details">
+        <div class="detail-row">
+            <span><strong>Order Number</strong></span>
+            <span>{{ order.order_number }}</span>
+        </div>
+        <div class="detail-row">
+            <span><strong>Subtotal</strong></span>
+            <span>${{ order.subtotal|floatformat:2 }}</span>
+        </div>
+        <div class="detail-row">
+            <span><strong>Tax (10%)</strong></span>
+            <span>${{ order.tax_amount|floatformat:2 }}</span>
+        </div>
+        <div class="detail-row">
+            <span><strong>Total Amount</strong></span>
+            <span><strong>${{ order.total_amount|floatformat:2 }}</strong></span>
+        </div>
+    </div>
+    
+    
+
+    <div class="order-items">
+        <h5 class="mb-3">Order Items</h5>
+        {% for item in order_items %}
+            <div class="item-row">
+                <span>
+                    {{ item.product.name }} × {{ item.quantity }}
+                    <small class="text-muted">
+                        ({{ item.get_transaction_type_display }})
+                        {% if item.transaction_type == 'rent' %}
+                            - {{ item.rental_days }} days
+                        {% endif %}
+                    </small>
+                </span>
+                <span>${{ item.total_price|floatformat:2 }}</span>
+            </div>
+        {% endfor %}
+    </div>
+
+    <div class="mt-4">
+        <a href="{% url 'home' %}" class="btn-continue">
+            <i class="fas fa-arrow-left"></i> Continue Shopping
+        </a>
+        <a href="{% url 'my_orders' %}" class="btn-orange ms-2">
+            <i class="fas fa-box"></i> View My Orders
+        </a>
+    </div>
+</div>
+{% endblock %}

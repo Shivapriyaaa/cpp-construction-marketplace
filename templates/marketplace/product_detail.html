@@ -1,0 +1,298 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ product.name }} - ConstructionMart{% endblock %}
+
+{% block content %}
+<style>
+    .product-detail {
+        background: white;
+        border-radius: var(--radius-lg);
+        padding: 2rem;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .product-image {
+        border-radius: var(--radius-md);
+        overflow: hidden;
+        background: var(--light-bg);
+        min-height: 400px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .product-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        max-height: 500px;
+    }
+
+    .product-image .placeholder-icon {
+        font-size: 6rem;
+        color: #CBD5E1;
+    }
+
+    .product-info h1 {
+        font-weight: 800;
+        margin-bottom: 0.5rem;
+    }
+
+    .product-info .category-tag {
+        color: var(--primary-blue);
+        font-weight: 500;
+    }
+
+    .product-info .price-display {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: var(--primary-blue);
+    }
+
+    .product-info .price-display .rent-label {
+        font-size: 1rem;
+        color: var(--gray-text);
+        font-weight: 400;
+    }
+
+    .product-type-badge {
+        padding: 6px 16px;
+        border-radius: 50px;
+        font-weight: 600;
+        display: inline-block;
+        margin: 8px 0;
+    }
+
+    .product-type-badge.sale {
+        background: #E8F5E9;
+        color: #2E7D32;
+    }
+
+    .product-type-badge.rent {
+        background: #E3F2FD;
+        color: #1565C0;
+    }
+
+    .product-type-badge.both {
+        background: #F3E5F5;
+        color: #6A1B9A;
+    }
+
+    .quantity-selector {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin: 1rem 0;
+    }
+
+    .quantity-selector button {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: 2px solid var(--border-light);
+        background: white;
+        font-size: 1.2rem;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+
+    .quantity-selector button:hover {
+        border-color: var(--primary-blue);
+        color: var(--primary-blue);
+    }
+
+    .quantity-selector input {
+        width: 60px;
+        text-align: center;
+        border: 2px solid var(--border-light);
+        border-radius: 8px;
+        padding: 0.5rem;
+        font-weight: 600;
+    }
+
+    .related-products {
+        margin-top: 3rem;
+    }
+
+    .related-products .product-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 1.5rem;
+    }
+
+    @media (max-width: 768px) {
+        .product-detail {
+            padding: 1rem;
+        }
+        
+        .product-info .price-display {
+            font-size: 2rem;
+        }
+    }
+</style>
+
+<div class="product-detail">
+    <div class="row g-4">
+        <div class="col-lg-6">
+            <div class="product-image">
+                {% if product.image %}
+                    <img src="{{ product.image.url }}" alt="{{ product.name }}">
+                {% else %}
+                    <div class="placeholder-icon">
+                        <i class="fas fa-tools"></i>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="product-info">
+                <span class="category-tag">{{ product.category.name }}</span>
+                <h1>{{ product.name }}</h1>
+                
+                <div class="product-type-badge {{ product.product_type }}">
+                    {% if product.product_type == 'sale' %}
+                        <i class="fas fa-tag"></i> For Sale Only
+                    {% elif product.product_type == 'rent' %}
+                        <i class="fas fa-calendar-alt"></i> For Rent Only
+                    {% else %}
+                        <i class="fas fa-exchange-alt"></i> Both Sale & Rent
+                    {% endif %}
+                </div>
+
+                <div class="mt-3">
+                    {% if product.product_type == 'sale' or product.product_type == 'both' %}
+                        <div>
+                            <span class="price-display">${{ product.price }}</span>
+                            <span class="text-muted"> (Purchase)</span>
+                        </div>
+                    {% endif %}
+                    {% if product.product_type == 'rent' or product.product_type == 'both' %}
+                        <div>
+                            <span class="price-display">${{ product.rental_price }}</span>
+                            <span class="rent-label">/ {{ product.rental_period|default:"day" }} (Rental)</span>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="mt-3">
+                    <span class="stock-badge {% if product.stock_quantity > 10 %}in-stock{% else %}low-stock{% endif %}">
+                        <i class="fas fa-box"></i> {{ product.stock_quantity }} units available
+                    </span>
+                </div>
+
+                <div class="mt-3">
+                    <p>{{ product.description }}</p>
+                </div>
+
+                {% if user.is_authenticated and product.is_available and product.stock_quantity > 0 %}
+                    <form method="POST" action="{% url 'add_to_cart' product.id %}" class="mt-4">
+                        {% csrf_token %}
+                        
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Transaction Type</label>
+                                <select name="transaction_type" class="form-select" id="transactionType">
+                                    {% if product.product_type == 'sale' or product.product_type == 'both' %}
+                                        <option value="sale">Buy</option>
+                                    {% endif %}
+                                    {% if product.product_type == 'rent' or product.product_type == 'both' %}
+                                        <option value="rent">Rent</option>
+                                    {% endif %}
+                                </select>
+                            </div>
+                            <div class="col-md-6" id="rentalDaysDiv" style="display: none;">
+                                <label class="form-label fw-bold">Rental Days</label>
+                                <input type="number" name="rental_days" class="form-control" value="1" min="1" max="30">
+                            </div>
+                        </div>
+
+                        <div class="quantity-selector">
+                            <label class="fw-bold me-3">Quantity:</label>
+                            <button type="button" onclick="decreaseQuantity()">-</button>
+                            <input type="number" name="quantity" id="quantityInput" value="1" min="1" max="{{ product.stock_quantity }}">
+                            <button type="button" onclick="increaseQuantity()">+</button>
+                        </div>
+
+                        <button type="submit" class="btn-orange w-100 mt-3">
+                            <i class="fas fa-shopping-cart"></i> Add to Cart
+                        </button>
+                    </form>
+                {% elif not user.is_authenticated %}
+                    <div class="alert alert-warning mt-3">
+                        <i class="fas fa-info-circle"></i> Please <a href="{% url 'login' %}">login</a> to add items to cart.
+                    </div>
+                {% else %}
+                    <div class="alert alert-warning mt-3">
+                        <i class="fas fa-exclamation-triangle"></i> This product is currently unavailable.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    {% if related_products %}
+        <div class="related-products">
+            <h3 class="mb-3"><i class="fas fa-th-large"></i> Related Products</h3>
+            <div class="product-grid">
+                {% for related in related_products %}
+                    <div class="product-card">
+                        <div class="image-wrapper">
+                            {% if related.image %}
+                                <img src="{{ related.image.url }}" alt="{{ related.name }}">
+                            {% else %}
+                                <div class="placeholder-icon">
+                                    <i class="fas fa-tools"></i>
+                                </div>
+                            {% endif %}
+                            <span class="badge-type {% if related.product_type == 'sale' %}sale{% elif related.product_type == 'rent' %}rent{% else %}both{% endif %}">
+                                {{ related.get_product_type_display }}
+                            </span>
+                        </div>
+                        <div class="card-body">
+                            <h6 class="card-title">{{ related.name }}</h6>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="price-tag">
+                                    ${% if related.product_type == 'sale' or related.product_type == 'both' %}{{ related.price }}{% else %}{{ related.rental_price }}{% endif %}
+                                </span>
+                                <span class="stock-badge {% if related.stock_quantity > 10 %}in-stock{% else %}low-stock{% endif %}">
+                                    {{ related.stock_quantity }}
+                                </span>
+                            </div>
+                            <a href="{% url 'product_detail' related.id %}" class="btn-outline-blue w-100">View</a>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+    // Quantity controls
+    function decreaseQuantity() {
+        const input = document.getElementById('quantityInput');
+        if (input.value > 1) {
+            input.value = parseInt(input.value) - 1;
+        }
+    }
+
+    function increaseQuantity() {
+        const input = document.getElementById('quantityInput');
+        const max = parseInt(input.getAttribute('max'));
+        if (input.value < max) {
+            input.value = parseInt(input.value) + 1;
+        }
+    }
+
+    // Show/hide rental days
+    document.getElementById('transactionType').addEventListener('change', function() {
+        const rentalDiv = document.getElementById('rentalDaysDiv');
+        if (this.value === 'rent') {
+            rentalDiv.style.display = 'block';
+        } else {
+            rentalDiv.style.display = 'none';
+        }
+    });
+</script>
+{% endblock %}

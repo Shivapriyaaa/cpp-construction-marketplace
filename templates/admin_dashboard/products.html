@@ -1,0 +1,478 @@
+{% extends "admin_dashboard/base_admin.html" %}
+
+{% block title %}Products - ConstructionMart Admin{% endblock %}
+{% block page_title %}Products Management{% endblock %}
+{% block page_subtitle %}Manage your product catalog{% endblock %}
+
+{% block content %}
+<style>
+    .filter-bar {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin-bottom: 1.5rem;
+    }
+
+    .filter-bar .form-control,
+    .filter-bar .form-select {
+        border: 2px solid var(--border-light);
+        border-radius: 8px;
+        padding: 0.5rem 1rem;
+        min-width: 150px;
+    }
+
+    .filter-bar .form-control:focus,
+    .filter-bar .form-select:focus {
+        border-color: var(--primary-blue);
+        box-shadow: none;
+    }
+
+    /* Product Image Thumbnail - Small Box */
+    .product-image-thumb {
+        width: 60px;
+        height: 60px;
+        border-radius: 8px;
+        overflow: hidden;
+        background: var(--light-bg);
+        border: 2px solid var(--border-light);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        position: relative;
+    }
+
+    .product-image-thumb img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .product-image-thumb .placeholder {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #CBD5E1;
+        font-size: 1.8rem;
+        background: #F8F9FA;
+    }
+
+    .product-image-thumb .no-image {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #CBD5E1;
+        font-size: 1.8rem;
+        background: #F8F9FA;
+    }
+
+    .product-info-cell {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .product-info-cell .product-details {
+        min-width: 150px;
+    }
+
+    .product-info-cell .product-details .product-name {
+        font-weight: 600;
+        font-size: 0.95rem;
+        margin: 0;
+        line-height: 1.2;
+    }
+
+    .product-info-cell .product-details .product-id {
+        font-size: 0.75rem;
+        color: var(--gray-text);
+        margin: 0;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .action-buttons .btn-sm {
+        padding: 0.25rem 0.75rem;
+        font-size: 0.8rem;
+    }
+
+    .btn-edit {
+        background: #E3F2FD;
+        color: var(--primary-blue);
+        border: none;
+        border-radius: 6px;
+        padding: 6px 12px;
+        transition: all 0.3s;
+    }
+
+    .btn-edit:hover {
+        background: var(--primary-blue);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .btn-delete {
+        background: #FBE9E7;
+        color: var(--danger-red);
+        border: none;
+        border-radius: 6px;
+        padding: 6px 12px;
+        transition: all 0.3s;
+    }
+
+    .btn-delete:hover {
+        background: var(--danger-red);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .pagination-custom {
+        display: flex;
+        justify-content: center;
+        gap: 0.5rem;
+        margin-top: 1.5rem;
+    }
+
+    .pagination-custom .page-link {
+        border: 2px solid var(--border-light);
+        border-radius: 8px;
+        color: var(--dark-text);
+        padding: 0.5rem 1rem;
+        transition: all 0.3s;
+        text-decoration: none;
+    }
+
+    .pagination-custom .page-link:hover {
+        border-color: var(--primary-blue);
+        color: var(--primary-blue);
+    }
+
+    .pagination-custom .page-item.active .page-link {
+        background: var(--primary-blue);
+        border-color: var(--primary-blue);
+        color: white;
+    }
+
+    .badge-status {
+        padding: 4px 12px;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 0.75rem;
+        display: inline-block;
+        white-space: nowrap;
+    }
+
+    .badge-status.active {
+        background: #E8F5E9;
+        color: #2E7D32;
+    }
+
+    .badge-status.paid {
+        background: #E3F2FD;
+        color: #1565C0;
+    }
+
+    .badge-status.shipped {
+        background: #F3E5F5;
+        color: #6A1B9A;
+    }
+
+    .badge-status.cancelled {
+        background: #FBE9E7;
+        color: #C62828;
+    }
+
+    .badge-status.inactive {
+        background: #F5F5F5;
+        color: #9E9E9E;
+    }
+
+    .table-custom tbody td {
+        vertical-align: middle;
+        padding: 12px 16px;
+    }
+
+    @media (max-width: 768px) {
+        .product-image-thumb {
+            width: 40px;
+            height: 40px;
+        }
+        
+        .product-info-cell .product-details .product-name {
+            font-size: 0.85rem;
+        }
+        
+        .filter-bar {
+            flex-direction: column;
+        }
+        
+        .filter-bar .form-control,
+        .filter-bar .form-select {
+            width: 100%;
+            min-width: unset;
+        }
+    }
+</style>
+
+<div class="content-card">
+    <div class="card-header">
+        <h5><i class="fas fa-boxes"></i> All Products</h5>
+        <div class="card-actions">
+            <a href="{% url 'admin_product_add' %}" class="btn-primary-custom">
+                <i class="fas fa-plus"></i> Add Product
+            </a>
+        </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="filter-bar">
+        <input type="text" class="form-control" placeholder="Search products..." id="searchProducts" value="{{ request.GET.search }}">
+        <select class="form-select" id="filterCategory">
+            <option value="">All Categories</option>
+            {% for category in categories %}
+                <option value="{{ category.id }}" {% if request.GET.category == category.id|stringformat:"s" %}selected{% endif %}>
+                    {{ category.name }}
+                </option>
+            {% endfor %}
+        </select>
+        <select class="form-select" id="filterType">
+            <option value="">All Types</option>
+            <option value="sale" {% if request.GET.type == 'sale' %}selected{% endif %}>For Sale</option>
+            <option value="rent" {% if request.GET.type == 'rent' %}selected{% endif %}>For Rent</option>
+            <option value="both" {% if request.GET.type == 'both' %}selected{% endif %}>Both</option>
+        </select>
+        <select class="form-select" id="filterStock">
+            <option value="">All Stock</option>
+            <option value="in" {% if request.GET.stock == 'in' %}selected{% endif %}>In Stock</option>
+            <option value="low" {% if request.GET.stock == 'low' %}selected{% endif %}>Low Stock</option>
+            <option value="out" {% if request.GET.stock == 'out' %}selected{% endif %}>Out of Stock</option>
+        </select>
+        <button class="btn-primary-custom" onclick="applyFilters()">
+            <i class="fas fa-search"></i> Apply Filters
+        </button>
+        <a href="{% url 'admin_products' %}" class="btn-outline-blue">
+            <i class="fas fa-times"></i> Clear
+        </a>
+    </div>
+
+    <!-- Products Table -->
+    <div class="table-responsive">
+        <table class="table-custom">
+            <thead>
+                <tr>
+                    <th style="min-width: 200px;">Product</th>
+                    <th>Category</th>
+                    <th>Type</th>
+                    <th>Price</th>
+                    <th>Stock</th>
+                    <th>Status</th>
+                    <th style="min-width: 120px;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for product in products %}
+                    <tr>
+                        <td>
+                            <div class="product-info-cell">
+                                <!-- Product Image Box -->
+                                <div class="product-image-thumb">
+                                    {% if product.image %}
+                                        <img src="{{ product.image.url }}" alt="{{ product.name }}">
+                                    {% else %}
+                                        <div class="no-image">
+                                            <i class="fas fa-tools"></i>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <!-- Product Details -->
+                                <div class="product-details">
+                                    <p class="product-name">{{ product.name|truncatechars:30 }}</p>
+                                    <p class="product-id">ID: #{{ product.id }}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span style="font-size: 0.9rem;">
+                                {{ product.category.name|default:"<span style='color: #CBD5E1;'>Uncategorized</span>"|safe }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge-status {% if product.product_type == 'sale' %}active{% elif product.product_type == 'rent' %}paid{% else %}shipped{% endif %}">
+                                {{ product.get_product_type_display }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if product.product_type == 'sale' or product.product_type == 'both' %}
+                                <div><strong>${{ product.price }}</strong></div>
+                            {% endif %}
+                            {% if product.product_type == 'rent' or product.product_type == 'both' %}
+                                <div style="font-size: 0.8rem; color: var(--gray-text);">
+                                    Rent: ${{ product.rental_price }} 
+                                    {% if product.rental_period %}/ {{ product.rental_period }}{% endif %}
+                                </div>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div style="text-align: center;">
+                                <span class="badge-status {% if product.stock_quantity > 10 %}active{% elif product.stock_quantity > 0 %}paid{% else %}cancelled{% endif %}">
+                                    {{ product.stock_quantity }}
+                                </span>
+                                {% if product.stock_quantity <= 5 and product.stock_quantity > 0 %}
+                                    <div style="font-size: 0.65rem; color: #E65100; margin-top: 2px;">
+                                        <i class="fas fa-exclamation-triangle"></i> Low
+                                    </div>
+                                {% endif %}
+                                {% if product.stock_quantity == 0 %}
+                                    <div style="font-size: 0.65rem; color: #C62828; margin-top: 2px;">
+                                        <i class="fas fa-times-circle"></i> Out of Stock
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge-status {% if product.is_available %}active{% else %}inactive{% endif %}">
+                                {% if product.is_available %}
+                                    <i class="fas fa-check-circle"></i> Active
+                                {% else %}
+                                    <i class="fas fa-times-circle"></i> Inactive
+                                {% endif %}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="action-buttons">
+                                <a href="{% url 'admin_product_edit' product.id %}" 
+                                   class="btn-edit" 
+                                   title="Edit Product">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <button class="btn-delete" 
+                                        onclick="confirmDelete({{ product.id }}, '{{ product.name|escapejs }}')"
+                                        title="Delete Product">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-5">
+                            <div style="color: #CBD5E1; font-size: 3rem; margin-bottom: 1rem;">
+                                <i class="fas fa-inbox"></i>
+                            </div>
+                            <h5 style="color: var(--gray-text);">No products found</h5>
+                            <p style="color: var(--gray-text); font-size: 0.9rem;">
+                                Start by adding your first product.
+                            </p>
+                            <a href="{% url 'admin_product_add' %}" class="btn-orange-custom" style="display: inline-block; margin-top: 1rem;">
+                                <i class="fas fa-plus"></i> Add Product
+                            </a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if products.has_other_pages %}
+        <div class="pagination-custom">
+            {% if products.has_previous %}
+                <a href="?page={{ products.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}{% if request.GET.stock %}&stock={{ request.GET.stock }}{% endif %}" class="page-link">
+                    <i class="fas fa-chevron-left"></i>
+                </a>
+            {% endif %}
+            {% for num in products.paginator.page_range %}
+                <a href="?page={{ num }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}{% if request.GET.stock %}&stock={{ request.GET.stock }}{% endif %}" 
+                   class="page-link {% if num == products.number %}active{% endif %}">
+                    {{ num }}
+                </a>
+            {% endfor %}
+            {% if products.has_next %}
+                <a href="?page={{ products.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}{% if request.GET.stock %}&stock={{ request.GET.stock }}{% endif %}" class="page-link">
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-exclamation-triangle" style="color: var(--danger-red);"></i> 
+                    Confirm Delete
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete the product:</p>
+                <p class="text-center" style="font-weight: 600; font-size: 1.1rem; padding: 0.5rem; background: var(--light-bg); border-radius: 8px;" id="productNameDisplay"></p>
+                <p class="text-muted" style="font-size: 0.9rem;">
+                    <i class="fas fa-info-circle"></i> This action cannot be undone. All associated data will be permanently removed.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+                <form id="deleteForm" method="POST" action="" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-danger-custom">
+                        <i class="fas fa-trash"></i> Delete Product
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function confirmDelete(productId, productName) {
+        document.getElementById('productNameDisplay').textContent = productName || 'This product';
+        document.getElementById('deleteForm').action = `/admin/products/${productId}/delete/`;
+        new bootstrap.Modal(document.getElementById('deleteModal')).show();
+    }
+
+    function applyFilters() {
+        const search = document.getElementById('searchProducts').value;
+        const category = document.getElementById('filterCategory').value;
+        const type = document.getElementById('filterType').value;
+        const stock = document.getElementById('filterStock').value;
+        
+        let url = '?';
+        if (search) url += `search=${encodeURIComponent(search)}&`;
+        if (category) url += `category=${category}&`;
+        if (type) url += `type=${type}&`;
+        if (stock) url += `stock=${stock}&`;
+        
+        // Remove trailing & or ?
+        url = url.replace(/[?&]$/, '');
+        
+        window.location.href = url || window.location.pathname;
+    }
+
+    // Auto-apply filters on enter key
+    document.getElementById('searchProducts').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            applyFilters();
+        }
+    });
+
+    // Auto-apply filters on select change
+    document.querySelectorAll('#filterCategory, #filterType, #filterStock').forEach(select => {
+        select.addEventListener('change', applyFilters);
+    });
+</script>
+{% endblock %}

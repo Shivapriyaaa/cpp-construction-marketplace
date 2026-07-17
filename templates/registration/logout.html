@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}Logged Out - ConstructionMart{% endblock %}
+
+{% block content %}
+<style>
+    .logout-section {
+        max-width: 450px;
+        margin: 0 auto;
+        background: white;
+        border-radius: var(--radius-lg);
+        padding: 2.5rem;
+        box-shadow: var(--shadow-sm);
+        text-align: center;
+    }
+
+    .logout-section .logout-icon {
+        font-size: 4rem;
+        color: var(--primary-blue);
+        margin-bottom: 1rem;
+    }
+
+    .logout-section h2 {
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .logout-section .btn-login {
+        background: var(--primary-blue);
+        color: white;
+        border: none;
+        padding: 0.75rem 2rem;
+        border-radius: 50px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-block;
+        transition: all 0.3s;
+        margin-top: 1rem;
+    }
+
+    .logout-section .btn-login:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+        color: white;
+    }
+</style>
+
+<div class="logout-section">
+    <div class="logout-icon">
+        <i class="fas fa-sign-out-alt"></i>
+    </div>
+    <h2>Logged Out</h2>
+    <p class="text-muted">You have been successfully logged out.</p>
+    <a href="{% url 'login' %}" class="btn-login">
+        <i class="fas fa-sign-in-alt"></i> Login Again
+    </a>
+</div>
+{% endblock %}

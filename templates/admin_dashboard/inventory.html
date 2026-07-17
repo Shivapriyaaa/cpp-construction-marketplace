@@ -1,0 +1,199 @@
+{% extends "admin_dashboard/base_admin.html" %}
+
+{% block title %}Inventory - ConstructionMart Admin{% endblock %}
+{% block page_title %}Inventory Management{% endblock %}
+{% block page_subtitle %}Monitor and manage stock levels{% endblock %}
+
+{% block content %}
+<style>
+    .inventory-summary {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .inventory-summary .summary-item {
+        background: white;
+        padding: 1.5rem;
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-sm);
+        text-align: center;
+    }
+
+    .inventory-summary .summary-item .number {
+        font-size: 2rem;
+        font-weight: 700;
+    }
+
+    .inventory-summary .summary-item .label {
+        color: var(--gray-text);
+        font-size: 0.9rem;
+    }
+
+    .inventory-summary .summary-item .number.green {
+        color: var(--success-green);
+    }
+
+    .inventory-summary .summary-item .number.orange {
+        color: var(--primary-orange);
+    }
+
+    .inventory-summary .summary-item .number.red {
+        color: var(--danger-red);
+    }
+
+    .stock-level-bar {
+        width: 100%;
+        height: 6px;
+        background: var(--light-bg);
+        border-radius: 3px;
+        overflow: hidden;
+        margin-top: 0.5rem;
+    }
+
+    .stock-level-bar .fill {
+        height: 100%;
+        border-radius: 3px;
+        transition: width 0.3s;
+    }
+
+    .stock-level-bar .fill.green {
+        background: var(--success-green);
+    }
+
+    .stock-level-bar .fill.orange {
+        background: var(--primary-orange);
+    }
+
+    .stock-level-bar .fill.red {
+        background: var(--danger-red);
+    }
+</style>
+
+<!-- Inventory Summary -->
+<div class="inventory-summary">
+    <div class="summary-item">
+        <div class="number">{{ total_products }}</div>
+        <div class="label">Total Products</div>
+    </div>
+    <div class="summary-item">
+        <div class="number green">{{ total_stock }}</div>
+        <div class="label">Total Units in Stock</div>
+    </div>
+    <div class="summary-item">
+        <div class="number orange">{{ low_stock_count }}</div>
+        <div class="label">Low Stock Items</div>
+    </div>
+    <div class="summary-item">
+        <div class="number red">{{ out_of_stock_count }}</div>
+        <div class="label">Out of Stock Items</div>
+    </div>
+</div>
+
+<!-- Inventory Table -->
+<div class="content-card">
+    <div class="card-header">
+        <h5><i class="fas fa-warehouse"></i> Stock Levels</h5>
+        <div class="card-actions">
+            <select class="form-select form-select-sm" style="width: auto;" id="filterStockLevel">
+                <option value="">All</option>
+                <option value="in">In Stock</option>
+                <option value="low">Low Stock</option>
+                <option value="out">Out of Stock</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table-custom">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Category</th>
+                    <th>Type</th>
+                    <th>Stock</th>
+                    <th>Stock Level</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for product in products %}
+                    <tr>
+                        <td>
+                            <div style="font-weight: 600;">{{ product.name }}</div>
+                            <small class="text-muted">ID: #{{ product.id }}</small>
+                        </td>
+                        <td>{{ product.category.name|default:"-" }}</td>
+                        <td>{{ product.get_product_type_display }}</td>
+                        <td>{{ product.stock_quantity }}</td>
+                        <td style="min-width: 150px;">
+                            {% if product.stock_quantity == 0 %}
+                                <div class="stock-level-bar">
+                                    <div class="fill red" style="width: 0%"></div>
+                                </div>
+                                <span class="badge-status cancelled">Out of Stock</span>
+                            {% elif product.stock_quantity <= 10 %}
+                                <div class="stock-level-bar">
+                                    <div class="fill orange" style="width: {{ product.stock_quantity }}%"></div>
+                                </div>
+                                <span class="badge-status pending">Low Stock</span>
+                            {% else %}
+                                <div class="stock-level-bar">
+                                    <div class="fill green" style="width: 100%"></div>
+                                </div>
+                                <span class="badge-status active">In Stock</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge-status {% if product.is_available %}active{% else %}inactive{% endif %}">
+                                {% if product.is_available %}Active{% else %}Inactive{% endif %}
+                            </span>
+                        </td>
+                        <td>
+                            <a href="{% url 'admin_product_edit' product.id %}" class="btn-edit btn-sm">
+                                <i class="fas fa-edit"></i> Update
+                            </a>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-4">
+                            <i class="fas fa-inbox fa-2x d-block mb-2"></i>
+                            No products found
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    document.getElementById('filterStockLevel').addEventListener('change', function() {
+        const filter = this.value;
+        const rows = document.querySelectorAll('tbody tr');
+        
+        rows.forEach(row => {
+            const stockBadge = row.querySelector('.badge-status');
+            if (!stockBadge) return;
+            
+            const isInStock = stockBadge.classList.contains('active');
+            const isLowStock = stockBadge.classList.contains('pending');
+            const isOutOfStock = stockBadge.classList.contains('cancelled');
+            
+            let show = true;
+            if (filter === 'in') {
+                show = isInStock;
+            } else if (filter === 'low') {
+                show = isLowStock;
+            } else if (filter === 'out') {
+                show = isOutOfStock;
+            }
+            
+            row.style.display = show ? '' : 'none';
+        });
+    });
+</script>
+{% endblock %}

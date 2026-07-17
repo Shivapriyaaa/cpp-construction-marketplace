@@ -1,0 +1,555 @@
+{% extends "admin_dashboard/base_admin.html" %}
+
+{% block title %}{% if product %}Edit{% else %}Add{% endif %} Product - ConstructionMart Admin{% endblock %}
+{% block page_title %}{% if product %}Edit Product{% else %}Add New Product{% endif %}{% endblock %}
+{% block page_subtitle %}{% if product %}Update product details{% else %}Create a new product listing{% endif %}{% endblock %}
+
+{% block content %}
+<style>
+    .product-form .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .product-form .form-group label {
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .product-form .form-group .form-control,
+    .product-form .form-group .form-select {
+        border: 2px solid var(--border-light);
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        transition: all 0.3s;
+    }
+
+    .product-form .form-group .form-control:focus,
+    .product-form .form-group .form-select:focus {
+        border-color: var(--primary-blue);
+        box-shadow: none;
+    }
+
+    .product-form .form-group .help-text {
+        font-size: 0.85rem;
+        color: var(--gray-text);
+        margin-top: 0.25rem;
+    }
+
+    .product-form .form-group .errorlist {
+        color: var(--danger-red);
+        font-size: 0.85rem;
+        list-style: none;
+        padding: 0;
+        margin: 0.25rem 0;
+    }
+
+    .product-form .image-preview {
+        max-width: 200px;
+        max-height: 200px;
+        border-radius: var(--radius-md);
+        overflow: hidden;
+        border: 2px solid var(--border-light);
+        margin-top: 0.5rem;
+    }
+
+    .product-form .image-preview img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--border-light);
+    }
+
+    .btn-save {
+        background: var(--success-green);
+        color: white;
+        border: none;
+        padding: 0.75rem 2rem;
+        border-radius: 50px;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+
+    .btn-save:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+        color: white;
+    }
+
+    .btn-cancel {
+        background: var(--light-bg);
+        color: var(--dark-text);
+        border: 2px solid var(--border-light);
+        padding: 0.75rem 2rem;
+        border-radius: 50px;
+        font-weight: 600;
+        transition: all 0.3s;
+        text-decoration: none;
+    }
+
+    .btn-cancel:hover {
+        border-color: var(--gray-text);
+        transform: translateY(-2px);
+        text-decoration: none;
+        color: var(--dark-text);
+    }
+
+    .btn-generate {
+        background: var(--primary-orange);
+        color: white;
+        border: none;
+        padding: 0.5rem 1.5rem;
+        border-radius: 50px;
+        font-weight: 600;
+        transition: all 0.3s;
+        margin-left: 0.5rem;
+        cursor: pointer;
+    }
+
+    .btn-generate:hover {
+        background: #E65100;
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+        color: white;
+    }
+
+    .btn-generate:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none !important;
+    }
+
+    .btn-generate i {
+        margin-right: 0.25rem;
+    }
+
+    .description-container {
+        position: relative;
+    }
+
+    .description-actions {
+        display: flex;
+        align-items: center;
+        margin-bottom: 0.5rem;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .description-loader {
+        display: none;
+        margin-left: 0.5rem;
+        color: var(--gray-text);
+    }
+
+    .description-loader.show {
+        display: inline-block;
+    }
+
+    .spinner-border-sm {
+        width: 1rem;
+        height: 1rem;
+        border-width: 0.15rem;
+    }
+
+    .generated-badge {
+        font-size: 0.7rem;
+        background: #E8F5E9;
+        color: #2E7D32;
+        padding: 2px 8px;
+        border-radius: 50px;
+        margin-left: 0.5rem;
+        display: inline-block;
+    }
+
+    .error-message {
+        color: #C62828;
+        font-size: 0.85rem;
+        margin-top: 0.25rem;
+        display: none;
+    }
+
+    .error-message.show {
+        display: block;
+    }
+
+    .success-message {
+        color: #2E7D32;
+        font-size: 0.85rem;
+        margin-top: 0.25rem;
+        display: none;
+    }
+
+    .success-message.show {
+        display: block;
+    }
+</style>
+
+<div class="content-card">
+    <form method="POST" enctype="multipart/form-data" class="product-form" id="productForm">
+        {% csrf_token %}
+        
+        <div class="row">
+            <div class="col-lg-8">
+                <!-- Basic Information -->
+                <h5 class="mb-3"><i class="fas fa-info-circle"></i> Basic Information</h5>
+                
+                <div class="form-group">
+                    <label>Product Name *</label>
+                    {{ form.name }}
+                    {% if form.name.errors %}
+                        <ul class="errorlist">
+                            {% for error in form.name.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Category *</label>
+                            {{ form.category }}
+                            {% if form.category.errors %}
+                                <ul class="errorlist">
+                                    {% for error in form.category.errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Product Type *</label>
+                            {{ form.product_type }}
+                            <div class="help-text">Select whether this product is for sale, rent, or both</div>
+                            {% if form.product_type.errors %}
+                                <ul class="errorlist">
+                                    {% for error in form.product_type.errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Description with Auto-Generate Button -->
+                <div class="form-group">
+                    <div class="description-actions">
+                        <label class="mb-0">Description *</label>
+                        <button type="button" class="btn-generate" id="generateDescriptionBtn">
+                            <i class="fas fa-magic"></i> Auto-Generate
+                        </button>
+                        <span class="description-loader" id="descriptionLoader">
+                            <span class="spinner-border spinner-border-sm" role="status"></span>
+                            Generating...
+                        </span>
+                    </div>
+                    <div class="description-container">
+                        {{ form.description }}
+                        {% if form.description.errors %}
+                            <ul class="errorlist">
+                                {% for error in form.description.errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                        <div id="descriptionStatus"></div>
+                        <div class="help-text">
+                            <i class="fas fa-info-circle"></i> 
+                            Click "Auto-Generate" to create a description based on product name and category
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pricing -->
+                <h5 class="mb-3 mt-4"><i class="fas fa-dollar-sign"></i> Pricing</h5>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Sale Price ($)</label>
+                            {{ form.price }}
+                            <div class="help-text">Price for purchase (if applicable)</div>
+                            {% if form.price.errors %}
+                                <ul class="errorlist">
+                                    {% for error in form.price.errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group" id="rentalFields">
+                            <label>Rental Price ($)</label>
+                            {{ form.rental_price }}
+                            <div class="help-text">Price for rental (if applicable)</div>
+                            {% if form.rental_price.errors %}
+                                <ul class="errorlist">
+                                    {% for error in form.rental_price.errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Rental Period</label>
+                            {{ form.rental_period }}
+                            <div class="help-text">e.g., per day, per week, per month</div>
+                            {% if form.rental_period.errors %}
+                                <ul class="errorlist">
+                                    {% for error in form.rental_period.errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Stock Quantity *</label>
+                            {{ form.stock_quantity }}
+                            {% if form.stock_quantity.errors %}
+                                <ul class="errorlist">
+                                    {% for error in form.stock_quantity.errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <!-- Image Upload -->
+                <div class="form-group">
+                    <label>Product Image</label>
+                    {{ form.image }}
+                    {% if form.image.errors %}
+                        <ul class="errorlist">
+                            {% for error in form.image.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                    <div class="help-text">Upload a product image (JPG, PNG, GIF)</div>
+                    
+                    {% if product and product.image %}
+                        <div class="image-preview">
+                            <img src="{{ product.image.url }}" alt="{{ product.name }}">
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Status -->
+                <div class="form-group">
+                    <label>Status</label>
+                    <div class="form-check form-switch">
+                        {{ form.is_available }}
+                        <label class="form-check-label" for="id_is_available">
+                            {% if product.is_available %}Available{% else %}Unavailable{% endif %}
+                        </label>
+                    </div>
+                    <div class="help-text">Toggle to show/hide product from store</div>
+                </div>
+
+                <!-- Quick Tips -->
+                <div class="alert alert-info mt-3">
+                    <h6><i class="fas fa-lightbulb"></i> Quick Tips</h6>
+                    <ul class="mb-0" style="font-size: 0.9rem;">
+                        <li>Use clear, descriptive product names</li>
+                        <li>Click "Auto-Generate" for instant description</li>
+                        <li>Set competitive prices</li>
+                        <li>Keep stock levels updated</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="form-actions">
+            <button type="submit" class="btn-save">
+                <i class="fas fa-save"></i> {% if product %}Update Product{% else %}Create Product{% endif %}
+            </button>
+            <a href="{% url 'admin_products' %}" class="btn-cancel">Cancel</a>
+        </div>
+    </form>
+</div>
+
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const productType = document.querySelector('#id_product_type');
+        const rentalFields = document.getElementById('rentalFields');
+        const descriptionField = document.querySelector('#id_description');
+        const generateBtn = document.getElementById('generateDescriptionBtn');
+        const loader = document.getElementById('descriptionLoader');
+        const statusDiv = document.getElementById('descriptionStatus');
+        const productName = document.querySelector('#id_name');
+        const category = document.querySelector('#id_category');
+        
+        // Show/hide rental fields based on product type
+        function toggleRentalFields() {
+            if (productType.value === 'sale') {
+                rentalFields.style.display = 'none';
+            } else {
+                rentalFields.style.display = 'block';
+            }
+        }
+        
+        productType.addEventListener('change', toggleRentalFields);
+        toggleRentalFields();
+
+        // Status toggle text
+        const statusToggle = document.querySelector('#id_is_available');
+        const statusLabel = document.querySelector('label[for="id_is_available"]');
+        
+        statusToggle.addEventListener('change', function() {
+            if (this.checked) {
+                statusLabel.textContent = 'Available';
+            } else {
+                statusLabel.textContent = 'Unavailable';
+            }
+        });
+
+        // Auto-Generate Description
+        generateBtn.addEventListener('click', function() {
+            const name = productName.value.trim();
+            
+            if (!name) {
+                alert('Please enter a product name first before generating description.');
+                productName.focus();
+                return;
+            }
+
+            // Get category text
+            const categorySelect = category;
+            const categoryText = categorySelect.options[categorySelect.selectedIndex]?.text || 'Construction Equipment';
+            
+            // Disable button and show loader
+            generateBtn.disabled = true;
+            loader.classList.add('show');
+            generateBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+            
+            // Clear previous status
+            statusDiv.innerHTML = '';
+
+            // Prepare the data
+            const productTypeValue = productType.value;
+            let productTypeMap = {
+                'sale': 'power_tools',
+                'rent': 'construction',
+                'both': 'power_tools'
+            };
+            
+            const payload = {
+                product_name: name,
+                category: categoryText,
+                product_type: productTypeMap[productTypeValue] || 'default',
+                features: []
+            };
+
+            // Use Django proxy endpoint
+            const API_URL = '/admin/generate-description/';
+
+            fetch(API_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => { 
+                        throw new Error(err.error || 'Server error'); 
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Response data:', data);
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                if (data.description) {
+                    descriptionField.value = data.description;
+                    
+                    // Show success message
+                    statusDiv.innerHTML = '<div class="success-message show"><i class="fas fa-check-circle"></i> Description generated successfully!</div>';
+                    
+                    // Auto-remove success message after 5 seconds
+                    setTimeout(() => {
+                        const msg = statusDiv.querySelector('.success-message');
+                        if (msg) msg.classList.remove('show');
+                    }, 5000);
+                    
+                    // Show generated badge
+                    const container = document.querySelector('.description-container');
+                    let badge = container.querySelector('.generated-badge');
+                    if (!badge) {
+                        badge = document.createElement('span');
+                        badge.className = 'generated-badge';
+                        badge.textContent = ' Generated';
+                        container.appendChild(badge);
+                    }
+                    
+                    // Remove badge after 5 seconds
+                    setTimeout(() => {
+                        if (badge.parentNode) {
+                            badge.remove();
+                        }
+                    }, 5000);
+                } else {
+                    throw new Error('No description returned from server');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                statusDiv.innerHTML = `<div class="error-message show"><i class="fas fa-exclamation-circle"></i> ${error.message || 'Failed to generate description. Please try again.'}</div>`;
+                
+                // Auto-remove error message after 5 seconds
+                setTimeout(() => {
+                    const msg = statusDiv.querySelector('.error-message');
+                    if (msg) msg.classList.remove('show');
+                }, 5000);
+            })
+            .finally(() => {
+                // Re-enable button and hide loader
+                generateBtn.disabled = false;
+                loader.classList.remove('show');
+                generateBtn.innerHTML = '<i class="fas fa-magic"></i> Auto-Generate';
+            });
+        });
+
+        // Auto-generate on Ctrl+Enter in description field
+        descriptionField.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'Enter') {
+                e.preventDefault();
+                generateBtn.click();
+            }
+        });
+    });
+</script>
+
+
+{% endblock %}

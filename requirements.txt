@@ -1,0 +1,7 @@
+django
+requests
+psycopg2-binary
+boto3
+pillow
+taxation-lib
+django-storages

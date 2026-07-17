@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+
+{% block title %}Register - ConstructionMart{% endblock %}
+
+{% block content %}
+<style>
+    .register-section {
+        max-width: 550px;
+        margin: 0 auto;
+        background: white;
+        border-radius: var(--radius-lg);
+        padding: 2.5rem;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .register-section h2 {
+        text-align: center;
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+        color: var(--primary-blue);
+    }
+
+    .register-section .form-group {
+        margin-bottom: 1rem;
+    }
+
+    .register-section .form-control {
+        border: 2px solid var(--border-light);
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        transition: all 0.3s;
+    }
+
+    .register-section .form-control:focus {
+        border-color: var(--primary-blue);
+        box-shadow: none;
+    }
+
+    .register-section .help-text {
+        font-size: 0.85rem;
+        color: var(--gray-text);
+        margin-top: 0.25rem;
+    }
+
+    .btn-register {
+        background: var(--primary-orange);
+        color: white;
+        border: none;
+        padding: 0.75rem;
+        border-radius: 50px;
+        font-weight: 600;
+        width: 100%;
+        transition: all 0.3s;
+    }
+
+    .btn-register:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+        color: white;
+    }
+
+    .register-section .login-link {
+        text-align: center;
+        margin-top: 1.5rem;
+    }
+
+    .register-section .login-link a {
+        color: var(--primary-blue);
+        font-weight: 600;
+        text-decoration: none;
+    }
+
+    .register-section .login-link a:hover {
+        text-decoration: underline;
+    }
+
+    .errorlist {
+        color: #C62828;
+        font-size: 0.9rem;
+        list-style: none;
+        padding: 0;
+        margin: 0.25rem 0;
+    }
+</style>
+
+<div class="register-section">
+    <h2><i class="fas fa-user-plus"></i> Create Account</h2>
+    <form method="POST">
+        {% csrf_token %}
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label>First Name</label>
+                    {{ form.first_name }}
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label>Last Name</label>
+                    {{ form.last_name }}
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Username</label>
+            {{ form.username }}
+            {% if form.username.errors %}
+                <ul class="errorlist">
+                    {% for error in form.username.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+            <div class="help-text">150 characters or fewer. Letters, digits and @/./+/-/_ only.</div>
+        </div>
+
+        <div class="form-group">
+            <label>Email</label>
+            {{ form.email }}
+            {% if form.email.errors %}
+                <ul class="errorlist">
+                    {% for error in form.email.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label>Password</label>
+            {{ form.password1 }}
+            {% if form.password1.errors %}
+                <ul class="errorlist">
+                    {% for error in form.password1.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+            <div class="help-text">
+                <ul>
+                    <li>Your password can't be too similar to your other personal information.</li>
+                    <li>Your password must contain at least 8 characters.</li>
+                    <li>Your password can't be a commonly used password.</li>
+                    <li>Your password can't be entirely numeric.</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Confirm Password</label>
+            {{ form.password2 }}
+            {% if form.password2.errors %}
+                <ul class="errorlist">
+                    {% for error in form.password2.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+
+        <button type="submit" class="btn-register">Create Account</button>
+    </form>
+    <div class="login-link">
+        Already have an account? <a href="{% url 'login' %}">Login</a>
+    </div>
+</div>
+{% endblock %}

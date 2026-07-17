@@ -1,0 +1,285 @@
+{% extends "base.html" %}
+
+{% block title %}Cart - ConstructionMart{% endblock %}
+
+{% block content %}
+<style>
+    .cart-section {
+        background: white;
+        border-radius: var(--radius-lg);
+        padding: 2rem;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .cart-item {
+        display: flex;
+        align-items: center;
+        padding: 1rem 0;
+        border-bottom: 1px solid var(--border-light);
+    }
+
+    .cart-item:last-child {
+        border-bottom: none;
+    }
+
+    .cart-item .item-image {
+        width: 80px;
+        height: 80px;
+        background: var(--light-bg);
+        border-radius: var(--radius-md);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        flex-shrink: 0;
+    }
+
+    .cart-item .item-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .cart-item .item-image .placeholder-icon {
+        font-size: 2rem;
+        color: #CBD5E1;
+    }
+
+    .cart-item .item-details {
+        flex: 1;
+        padding: 0 1.5rem;
+    }
+
+    .cart-item .item-details h6 {
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+    }
+
+    .cart-item .item-details .item-type {
+        font-size: 0.85rem;
+        color: var(--gray-text);
+    }
+
+    .cart-item .item-details .item-type .badge-type {
+        padding: 2px 10px;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 0.7rem;
+    }
+
+    .badge-type.sale {
+        background: #E8F5E9;
+        color: #2E7D32;
+    }
+
+    .badge-type.rent {
+        background: #E3F2FD;
+        color: #1565C0;
+    }
+
+    .cart-item .item-actions {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .cart-item .item-actions .qty-control {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .cart-item .item-actions .qty-control button {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        border: 1px solid var(--border-light);
+        background: white;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+
+    .cart-item .item-actions .qty-control button:hover {
+        border-color: var(--primary-blue);
+        color: var(--primary-blue);
+    }
+
+    .cart-item .item-actions .qty-control span {
+        font-weight: 600;
+        min-width: 30px;
+        text-align: center;
+    }
+
+    .cart-item .item-total {
+        font-weight: 700;
+        font-size: 1.1rem;
+        color: var(--primary-blue);
+        min-width: 100px;
+        text-align: right;
+    }
+
+    .cart-summary {
+        background: var(--light-bg);
+        padding: 2rem;
+        border-radius: var(--radius-md);
+        margin-top: 2rem;
+    }
+
+    .cart-summary .summary-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.5rem 0;
+    }
+
+    .cart-summary .summary-row.total {
+        border-top: 2px solid var(--border-light);
+        margin-top: 0.5rem;
+        padding-top: 1rem;
+        font-weight: 700;
+        font-size: 1.25rem;
+    }
+
+    .btn-checkout {
+        background: var(--success-green);
+        color: white;
+        border: none;
+        padding: 1rem 2rem;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 1.1rem;
+        transition: all 0.3s;
+        width: 100%;
+    }
+
+    .btn-checkout:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+        color: white;
+        background: #1B5E20;
+    }
+
+    .empty-cart {
+        text-align: center;
+        padding: 4rem 2rem;
+    }
+
+    .empty-cart i {
+        font-size: 5rem;
+        color: #CBD5E1;
+        margin-bottom: 1rem;
+    }
+
+    .empty-cart h3 {
+        font-weight: 600;
+    }
+
+    @media (max-width: 768px) {
+        .cart-section {
+            padding: 1rem;
+        }
+
+        .cart-item {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .cart-item .item-details {
+            padding: 1rem 0;
+        }
+
+        .cart-item .item-actions {
+            flex-wrap: wrap;
+            justify-content: space-between;
+        }
+
+        .cart-item .item-total {
+            text-align: left;
+        }
+    }
+</style>
+
+<div class="cart-section">
+    <h2 class="mb-4"><i class="fas fa-shopping-cart"></i> Your Cart</h2>
+
+    {% if cart_items %}
+        {% for item in cart_items %}
+            <div class="cart-item">
+                <div class="item-image">
+                    {% if item.product.image %}
+                        <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}">
+                    {% else %}
+                        <div class="placeholder-icon">
+                            <i class="fas fa-tools"></i>
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="item-details">
+                    <h6>{{ item.product.name }}</h6>
+                    <div class="item-type">
+                        <span class="badge-type {{ item.transaction_type }}">
+                            {{ item.get_transaction_type_display }}
+                        </span>
+                        {% if item.transaction_type == 'rent' %}
+                            <span class="text-muted ms-2">
+                                {{ item.rental_days }} days
+                            </span>
+                        {% endif %}
+                    </div>
+                    <div class="mt-1">
+                        <small class="text-muted">
+                            ${% if item.transaction_type == 'sale' %}{{ item.product.price }}{% else %}{{ item.product.rental_price }}{% endif %} 
+                            {% if item.transaction_type == 'rent' %}/ {{ item.product.rental_period }}{% endif %}
+                        </small>
+                    </div>
+                </div>
+                <div class="item-actions">
+                    <form method="POST" action="{% url 'update_cart' item.id %}" class="qty-control">
+                        {% csrf_token %}
+                        <button type="submit" name="action" value="decrease">−</button>
+                        <span>{{ item.quantity }}</span>
+                        <button type="submit" name="action" value="increase">+</button>
+                    </form>
+                    <form method="POST" action="{% url 'update_cart' item.id %}">
+                        {% csrf_token %}
+                        <button type="submit" name="action" value="remove" class="btn btn-sm btn-outline-danger">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </form>
+                    <div class="item-total">
+                        ${{ item.get_total_price|floatformat:2 }}
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+
+        <div class="cart-summary">
+            <div class="summary-row">
+                <span>Subtotal</span>
+                <span>${{ subtotal|floatformat:2 }}</span>
+            </div>
+            <div class="summary-row">
+                <span>Tax (10%)</span>
+                <span>${{ tax_amount|floatformat:2 }}</span>
+            </div>
+            <div class="summary-row total">
+                <span>Total</span>
+                <span>${{ total|floatformat:2 }}</span>
+            </div>
+            <div class="mt-3">
+                <a href="{% url 'checkout' %}" class="btn-checkout">
+                    <i class="fas fa-credit-card"></i> Proceed to Checkout
+                </a>
+            </div>
+        </div>
+    {% else %}
+        <div class="empty-cart">
+            <i class="fas fa-shopping-cart"></i>
+            <h3>Your cart is empty</h3>
+            <p class="text-muted">Browse our products and add items you need.</p>
+            <a href="{% url 'home' %}" class="btn-orange">
+                <i class="fas fa-arrow-left"></i> Continue Shopping
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
