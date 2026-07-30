@@ -93,7 +93,7 @@ jobs:
         with:
 
           application_name: x24266388-eb-cpp
-          environment_name: X24266388-eb-cpp-env
+          environment_name: X24266388-eb
           region: us-east-1
           version_label: "build-${{ github.run_number }}"
           deployment_package: deploy.zip
