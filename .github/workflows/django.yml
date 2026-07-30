@@ -96,5 +96,5 @@ jobs:
           environment_name: X24266388-eb
           region: us-east-1
           version_label: "build-${{ github.run_number }}"
-          deployment_package: deploy.zip
+          deployment_package: deploy1.zip
           wait_for_deployment: false
