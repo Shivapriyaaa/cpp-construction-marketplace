@@ -91,10 +91,12 @@ jobs:
       - name: Deploy to Elastic Beanstalk
         uses: einaregilsson/beanstalk-deploy@v21
         with:
-
+          aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws_session_token: ${{ secrets.AWS_SESSION_TOKEN }}
           application_name: x24266388-eb-cpp
-          environment_name: X24266388-eb
+          environment_name: X24266388-eb-cpp-env
           region: us-east-1
           version_label: "build-${{ github.run_number }}"
-          deployment_package: deploy1.zip
+          deployment_package: deploy.zip
           wait_for_deployment: false
