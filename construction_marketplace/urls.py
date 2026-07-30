@@ -8,7 +8,7 @@ urlpatterns = [
     path('', include('marketplace.urls')),
     
     # Django admin - this should come AFTER marketplace URLs
-    path('admin/', admin.site.urls),
+    path('/admin/', admin.site.urls),
 ]
 
 if settings.DEBUG:
